@@ -136,39 +136,48 @@ class PluginMachinecheckerInputs extends CommonDBTM
 	  
 	  //clean db before add data
 	  self::ClearDatabase();
+      echo "<div class='center'>";
+      echo "<table class='tab_cadrehov'><tr><th>".__('Work in progress...')."</th></tr>";
+      echo "<tr class='tab_bg_2'><td>";
+      Html::createProgressBar(__('Work in progress...'));
+      echo "</td></tr></table></div>\n";
+	  $i = 0;
+	  $nb = substr_count( $ComputerList, '\r\n' );
       $ComputerList = explode('\r\n', $ComputerList);
       foreach ($ComputerList as $value):
          if (strlen($value) != 0) {
-            $query = "
-select  
-glpi_computers.id as computers_id,
-glpi_computers.name as computers_name,
-glpi_computertypes.name as computertypes_name,
-glpi_computers.contact as computers_contact,
-glpi_users.name as users_name,
-glpi_locations.completename as locations_completename,
-glpi_states.name as states_name
-from glpi_computers
-left join glpi_computertypes on glpi_computers.computertypes_id=glpi_computertypes.id
-left join glpi_locations ON glpi_computers.locations_id=glpi_locations.id
-left join glpi_states ON glpi_computers.states_id=glpi_states.id
-left join glpi_users ON glpi_computers.users_id=glpi_users.id
-where glpi_computers.name='" . $value . "'";
+            $query = "select 
+               glpi_computers.id as computers_id,
+               glpi_computers.name as computers_name,
+               glpi_computertypes.name as computertypes_name,
+               glpi_computers.contact as computers_contact,
+               glpi_users.name as users_name,
+               glpi_locations.completename as locations_completename,
+               glpi_states.name as states_name
+               from glpi_computers
+               left join glpi_computertypes on glpi_computers.computertypes_id=glpi_computertypes.id
+               left join glpi_locations ON glpi_computers.locations_id=glpi_locations.id
+               left join glpi_states ON glpi_computers.states_id=glpi_states.id
+               left join glpi_users ON glpi_computers.users_id=glpi_users.id
+               where glpi_computers.name='" . $value . "'";
             $result = $DB->query($query) or die("Query failed:" . $DB->error());
             if ($DB->numrows($result) == 0) {
                $insert_query = " insert into glpi_plugin_machinechecker_inputs
-			   (id,computers_id,computers_name,computertypes_name,computers_contact,users_name,locations_completename,states_name)
-			   values
-			   (NULL,'','" . $value . "','','','','','Absent de glpi')";
+               (id,computers_id,computers_name,computertypes_name,computers_contact,users_name,locations_completename,states_name)
+               values
+               (NULL,'','" . $value . "','','','','','Absent de glpi')";
                $DB->query($insert_query) or die("Query failed:" . $DB->error());
+               $i++;
+               Html::changeProgressBarPosition($i, $nb+1 ,"$i / $nb");
             }
             while ($row = $DB->fetch_array($result)) {
-               //$completename = $DB->escape($row[completename]);
                $insert_query = " insert into glpi_plugin_machinechecker_inputs
-			   (id,computers_id,computers_name,computertypes_name,computers_contact,users_name,locations_completename,states_name)
-			   values
-			   (NULL,'" . $row['computers_id'] . "','" . $row['computers_name'] . "','" . $row['computertypes_name'] . "','" . $row['computers_contact'] . "','" . $row['users_name']. "','" . $row['locations_completename']. "','" . $row['states_name']."')";
-			   $DB->query($insert_query) or die("Query failed:" . $DB->error());
+               (id,computers_id,computers_name,computertypes_name,computers_contact,users_name,locations_completename,states_name)
+               values
+               (NULL,'" . $row['computers_id'] . "','" . $row['computers_name'] . "','" . $row['computertypes_name'] . "','" . $row['computers_contact'] . "','" . $row['users_name']. "','" .mysql_real_escape_string($row['locations_completename']). "','" . $row['states_name']."')";
+               $DB->query($insert_query) or die("Query failed:" . $DB->error());
+               $i++;
+               Html::changeProgressBarPosition($i, $nb+1 ,"$i / $nb");
             }
          }
       endforeach;
