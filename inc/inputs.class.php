@@ -174,7 +174,7 @@ class PluginMachinecheckerInputs extends CommonDBTM
                $insert_query = " insert into glpi_plugin_machinechecker_inputs
                (id,computers_id,computers_name,computertypes_name,computers_contact,users_name,locations_completename,states_name)
                values
-               (NULL,'" . $row['computers_id'] . "','" . $row['computers_name'] . "','" . $row['computertypes_name'] . "','" . $row['computers_contact'] . "','" . $row['users_name']. "','" .mysql_real_escape_string($row['locations_completename']). "','" . $row['states_name']."')";
+               (NULL,'" . $row['computers_id'] . "','" . $row['computers_name'] . "','" . $row['computertypes_name'] . "','" . $row['computers_contact'] . "','" . $row['users_name']. "','" .htmlspecialchars($row['locations_completename']). "','" . $row['states_name']."')";
                $DB->query($insert_query) or die("Query failed:" . $DB->error());
                $i++;
                Html::changeProgressBarPosition($i, $nb+1 ,"$i / $nb");
