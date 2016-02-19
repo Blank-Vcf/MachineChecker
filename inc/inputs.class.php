@@ -29,7 +29,7 @@ class PluginMachinecheckerInputs extends CommonDBTM
       echo "<td width=\"300px\"><div id=\"debug\"><h2>Entrer la liste de machine a rechercher:</h2></div></td>";
       echo "<td><TEXTAREA NAME=\"computer_list\" id=\"computer_list\" ROWS=20 COLS=50 type=\"text\">";
       $query = "select computers_name
-				from glpi_plugin_machinechecker_inputs";
+                from glpi_plugin_machinechecker_inputs";
       $result = $DB->query($query) or die("Query failed:" . $DB->error());
       while ($row = $result->fetch_assoc())
          if (isset($row)) {
@@ -132,17 +132,17 @@ class PluginMachinecheckerInputs extends CommonDBTM
    function DoTheJob($ComputerList)
    {
       global $DB;
-	  $_SESSION['PluginMachinecheckerInputs'] = '1';
-	  
-	  //clean db before add data
-	  self::ClearDatabase();
+      $_SESSION['PluginMachinecheckerInputs'] = '1';
+
+      //clean db before add data
+      self::ClearDatabase();
       echo "<div class='center'>";
       echo "<table class='tab_cadrehov'><tr><th>".__('Work in progress...')."</th></tr>";
       echo "<tr class='tab_bg_2'><td>";
       Html::createProgressBar(__('Work in progress...'));
       echo "</td></tr></table></div>\n";
-	  $i = 0;
-	  $nb = substr_count( $ComputerList, '\r\n' );
+      $i = 0;
+      $nb = substr_count( $ComputerList, '\r\n' );
       $ComputerList = explode('\r\n', $ComputerList);
       foreach ($ComputerList as $value):
          if (strlen($value) != 0) {
@@ -174,7 +174,7 @@ class PluginMachinecheckerInputs extends CommonDBTM
                $insert_query = " insert into glpi_plugin_machinechecker_inputs
                (id,computers_id,computers_name,computertypes_name,computers_contact,users_name,locations_completename,states_name)
                values
-               (NULL,'" . $row['computers_id'] . "','" . $row['computers_name'] . "','" . $row['computertypes_name'] . "','" . $row['computers_contact'] . "','" . $row['users_name']. "','" .htmlspecialchars($row['locations_completename']). "','" . $row['states_name']."')";
+               (NULL,'" . $row['computers_id'] . "','" . $row['computers_name'] . "','" . $row['computertypes_name'] . "','" . $row['computers_contact'] . "','" . $row['users_name']. "','".htmlspecialchars($row['locations_completename'], ENT_QUOTES,'ISO-8859-1', true)."','" . $row['states_name']."')";
                $DB->query($insert_query) or die("Query failed:" . $DB->error());
                $i++;
                Html::changeProgressBarPosition($i, $nb+1 ,"$i / $nb");
