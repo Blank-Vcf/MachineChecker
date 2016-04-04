@@ -26,7 +26,7 @@ function plugin_version_machinechecker()
 {
    return array(
       'name' => 'Machine Checker',
-      'version' => '0.1',
+      'version' => '0.2',
       'author' => 'Blank @ Vcf',
       'license' => 'GPLv2+',
       'homepage' => 'http://clermont-ferrand.fr',
