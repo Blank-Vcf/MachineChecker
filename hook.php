@@ -28,23 +28,19 @@ function plugin_machinechecker_install()
 
    //clean and add default plugin table view
 
-   $DeleteViewquery = "DELETE FROM `glpi_displaypreferences`  where itemtype ='PluginMachinecheckerInputs'";
+   $DeleteViewquery = "DELETE FROM `glpi_displaypreferences`  where itemtype ='PluginMachinecheckerInput'";
    $DB->query($DeleteViewquery) or die($DB->error());
    $query = "INSERT INTO `glpi_displaypreferences`
             (id,itemtype,num,rank,users_id)
             VALUES
-            (NULL,'PluginMachinecheckerInputs', '6', '7', '0'),
-            (NULL,'PluginMachinecheckerInputs', '3', '2', '0'),
-            (NULL,'PluginMachinecheckerInputs', '4', '3', '0'),
-            (NULL,'PluginMachinecheckerInputs', '2', '1', '0'),
-            (NULL,'PluginMachinecheckerInputs', '5', '4', '0'),
-            (NULL,'PluginMachinecheckerInputs', '7', '6', '0'),
-            (NULL,'PluginMachinecheckerInputs', '11', '12', '0'),
-            (NULL,'PluginMachinecheckerInputs', '20', '10', '0'),
-            (NULL,'PluginMachinecheckerInputs', '31', '13', '0'),
-            (NULL,'PluginMachinecheckerInputs', '30', '9', '0'),
-            (NULL,'PluginMachinecheckerInputs', '21', '14', '0'),
-            (NULL,'PluginMachinecheckerInputs', '51', '11', '0')";
+            ('NULL', 'PluginMachinecheckerInput', '9', '8', '0'),
+            ('NULL', 'PluginMachinecheckerInput', '8', '7', '0'),
+            ('NULL', 'PluginMachinecheckerInput', '7', '6', '0'),
+            ('NULL', 'PluginMachinecheckerInput', '6', '5', '0'),
+            ('NULL', 'PluginMachinecheckerInput', '5', '4', '0'),
+            ('NULL', 'PluginMachinecheckerInput', '4', '3', '0'),
+            ('NULL', 'PluginMachinecheckerInput', '3', '2', '0'),
+            ('NULL', 'PluginMachinecheckerInput', '2', '1', '0')";
    $DB->query($query) or die($DB->error());
    return true;
 }
@@ -52,9 +48,9 @@ function plugin_machinechecker_install()
 function plugin_machinechecker_uninstall()
 {
    global $DB;
-   $DeleteViewquery = "DELETE FROM `glpi_displaypreferences`  where itemtype ='PluginMachinecheckerInputs'";
+   $DeleteViewquery = "DELETE FROM `glpi_displaypreferences`  where itemtype ='PluginMachinecheckerInput'";
    $DB->query($DeleteViewquery) or die($DB->error());
-   $DB->query("DROP TABLE IF EXISTS glpi_plugin_machinechecker_inputs");
+   $DB->query("DROP TABLE IF EXISTS glpi_plugin_machinechecker_input");
    
    return true;
 }
