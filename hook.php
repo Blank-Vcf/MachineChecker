@@ -50,7 +50,7 @@ function plugin_machinechecker_uninstall()
    global $DB;
    $DeleteViewquery = "DELETE FROM `glpi_displaypreferences`  where itemtype ='PluginMachinecheckerInput'";
    $DB->query($DeleteViewquery) or die($DB->error());
-   $DB->query("DROP TABLE IF EXISTS glpi_plugin_machinechecker_input");
+   $DB->query("DROP TABLE IF EXISTS glpi_plugin_machinechecker_inputs");
    
    return true;
 }
