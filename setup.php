@@ -12,12 +12,12 @@ function plugin_init_machinechecker()
          // Menu name
 
          $PLUGIN_HOOKS['menu_toadd']['machinechecker'] = array(
-            'tools' => 'PluginMachinecheckerInputs'
+            'tools' => 'PluginMachinecheckerInput'
          );
       }
 
       $PLUGIN_HOOKS['post_init']['machinechecker'] = 'plugin_machinechecker_postinit';
-      $PLUGIN_HOOKS['use_massive_action']['machinechecker'] = 1;
+      //$PLUGIN_HOOKS['use_massive_action']['machinechecker'] = 1;
    }
 }
 
@@ -26,7 +26,7 @@ function plugin_version_machinechecker()
 {
    return array(
       'name' => 'Machine Checker',
-      'version' => '0.2',
+      'version' => '0.3.0',
       'author' => 'Blank @ Vcf',
       'license' => 'GPLv2+',
       'homepage' => 'http://clermont-ferrand.fr',
