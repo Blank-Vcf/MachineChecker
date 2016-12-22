@@ -26,7 +26,7 @@ function plugin_version_machinechecker()
 {
    return array(
       'name' => 'Machine Checker',
-      'version' => '0.3.0',
+      'version' => '0.3.3',
       'author' => 'Blank @ Vcf',
       'license' => 'GPLv2+',
       'homepage' => 'http://clermont-ferrand.fr',
@@ -37,7 +37,7 @@ function plugin_version_machinechecker()
 
 function plugin_machinechecker_check_prerequisites()
 {
-   if (version_compare(GLPI_VERSION, '0.85', 'lt')) {
+   if (version_compare(GLPI_VERSION, '0.85', 'lt') || version_compare(GLPI_VERSION,'9.1.1','gt')) {
       echo "This plugin requires GLPI >= 0.85";
       return false;
    }
