@@ -4,12 +4,10 @@ if (!defined('GLPI_ROOT')) {
 }
 class PluginMachinecheckerInput extends CommonDBTM
 {
-   static $rightname = "plugin_machinechecker";
-   
+   static $rightname                   = 'computer';   
    static function getTypeName($nb = 0)
    {
-      //return "Machine Checker";
-      return _n('Machine Checker', 'Machine Checker', $nb);
+      return "Machine Checker";
    }
    
    static function canView()
@@ -26,15 +24,16 @@ class PluginMachinecheckerInput extends CommonDBTM
       echo "<tr><th colspan='2'>Machine checker</th></tr>";
       echo "<tr class='tab_bg_1'><td align='center'><table><tr>";
       echo "<FORM ACTION=\"" . $_SERVER['PHP_SELF'] . "\" METHOD=\"POST\">";
-      echo "<td width=\"300px\"><div id=\"debug\"><h2>".__('SearchList')."</h2></div>";
+      echo "<td width=\"300px\"><div id=\"debug\"><h2>".__('SearchList','machinechecker')."</h2></div>";
       echo "<td><TEXTAREA NAME=\"computer_list\" id=\"computer_list\" ROWS=20 COLS=50 type=\"text\">";
       $query = "select name
                 from glpi_plugin_machinechecker_inputs";
       $result = $DB->query($query) or die("Query failed:" . $DB->error());
-      while ($row = $result->fetch_assoc())
+      while ($row = $result->fetch_assoc()) {
          if (isset($row)) {
             echo htmlentities($row['name']) . "\r\n";
          }
+      }
       echo "</TEXTAREA></td></tr></table>";
       echo "<br />";
       echo "<INPUT TYPE=\"hidden\" name=\"showresult\" VALUE=\"1\">";
@@ -58,13 +57,14 @@ class PluginMachinecheckerInput extends CommonDBTM
    function getSearchOptions()
    {
       global $DB;
-      //$UserID=Session::getLoginUserID();
+   
       $tab                    = array();
-      
+      $tab['common']             = __('Characteristics');
+   
       $tab[2]['table']          = $this->gettable();
       $tab[2]['field']          = 'name';
       $tab[2]['name']           = __('Name');
-      $tab[2]['datatype']='itemlink';
+      $tab[2]['datatype']       = 'itemlink';
       $tab[2]['massiveaction']  = true;
       
       $tab[3]['table']          = 'glpi_computertypes';
@@ -87,8 +87,8 @@ class PluginMachinecheckerInput extends CommonDBTM
       $tab[6]['name']           = __('Location');
       $tab[6]['datatype']       = 'dropdown';
       
-      $items_device_joinparams   = array('jointype'          => 'itemtype_item',
-                                         'specific_itemtype' => 'Computer');
+      $items_device_joinparams  = array('jointype'          => 'itemtype_item',
+                                        'specific_itemtype' => 'Computer');
 
       $tab[7]['table']          = 'glpi_devicenetworkcards';
       $tab[7]['field']          = 'designation';
@@ -118,20 +118,16 @@ class PluginMachinecheckerInput extends CommonDBTM
                 FROM glpi_plugins
                 where directory='ocsinventoryng'";
       $result = $DB->query($query) or die("Query failed:" . $DB->error());
-      while ($row = $result->fetch_assoc())
+      while ($row = $result->fetch_assoc()) {
          if (isset($row)) {
-            if ($row['state']==0) {
-               $tab[10]['table']         = 'glpi_plugin_ocsinventoryng_ocslinks';
-               $tab[10]['field']         = 'last_ocs_conn';
-               // $tab[10]['linkfield']      = 'id';
-               $tab[10]['name']          = __('Last OCSNG connection date', 'ocsinventoryng');
-               $tab[10]['datatype']      = 'date';
-               $tab[10]['massiveaction'] = false;
-			  // $tab[10]['joinparams']     = array('jointype'          => 'computersid',
-                                        // 'specific_itemtype' => 'Computer');
-               $tab[10]['joinparams']    = array('condition' => 'AND glpi_plugin_machinechecker_inputs.id = glpi_plugin_ocsinventoryng_ocslinks.computers_id');
+            if ($row['state']==1) {
+               $tab[10]['table']          = $this->gettable();
+               $tab[10]['field']          = 'last_ocs_update';
+               $tab[10]['name']           = __('Last OCSNG inventory date', 'ocsinventoryng');
+               $tab[10]['datatype']       = 'datetime';
             }
          }
+      }
       return $tab;
    }
    
@@ -148,11 +144,17 @@ class PluginMachinecheckerInput extends CommonDBTM
       Html::createProgressBar(__('Work in progress...'));
       echo "</td></tr></table></div>\n";
       $i = 0;
+      $MissingStatusIdquery = "SELECT id FROM glpi_states where name = '".__('MissingStatus','machinechecker')."'";
+      $result = $DB->query($MissingStatusIdquery) or die($DB->error());
+      while ($row = $result->fetch_assoc()) {
+      if (isset($row)) {
+         $MissingStatusId = $row['id'];
+      }
       $nb = substr_count( $ComputerList, '\r\n' );
       $ComputerList = explode('\r\n', $ComputerList);
       foreach ($ComputerList as $value):
          if (strlen($value) != 0) {
-            $query = "select 
+            $query = "SELECT
                glpi_computers.id as computers_id,
                glpi_computers.name as computers_name,
                glpi_computertypes.id as computertypes_id,
@@ -168,19 +170,60 @@ class PluginMachinecheckerInput extends CommonDBTM
                where glpi_computers.name='" . $value . "'";
             $result = $DB->query($query) or die("Query failed:" . $DB->error());
             if ($DB->numrows($result) == 0) {
-               $insert_query = " insert into glpi_plugin_machinechecker_inputs
-               (id,name,computertypes_id,computers_contact,users_id,locations_id,states_id)
+               $insert_query = "insert into glpi_plugin_machinechecker_inputs
+               (id,name,computertypes_id,computers_contact,users_id,locations_id,states_id,last_ocs_update)
                values
-               ('','" . $value . "','','','','','15')";
+               ('0','" . $value . "',NULL,NULL,NULL,NULL,'".$MissingStatusId."',NULL)";
                $DB->query($insert_query) or die("Query failed:" . $DB->error());
                $i++;
                Html::changeProgressBarPosition($i, $nb+1 ,"$i / $nb");
+               continue;
             }
             while ($row = $DB->fetch_array($result)) {
-               $insert_query = " insert into glpi_plugin_machinechecker_inputs
-               (id,name,computertypes_id,computers_contact,users_id,locations_id,states_id)
+               //Get ocsng last_ocs_update if available
+               $OcsState = "SELECT state
+               FROM glpi_plugins
+               where directory='ocsinventoryng'";
+               $resultOcsState = $DB->query($OcsState) or die("Query failed:" . $DB->error());
+               while ($rowOcsState = $resultOcsState->fetch_assoc()) {
+                  if (isset($rowOcsState)) {
+                     if ($rowOcsState['state']==1) {
+                        $OcsQuery = "SELECT last_ocs_update
+                        from glpi_plugin_ocsinventoryng_ocslinks
+                        where glpi_plugin_ocsinventoryng_ocslinks.computers_id = '".$row['computers_id']."'";
+                        $resultOCS = $DB->query($OcsQuery) or die("Query failed:" . $DB->error());
+                        if ($DB->numrows($resultOCS) == 0) { 
+                           $last_ocs_update="NULL";
+                        }
+                        while ($rowOCS = $DB->fetch_array($resultOCS)) {
+                           $last_ocs_update=$rowOCS['last_ocs_update'];
+                        }
+                     }
+                  }
+               }
+               //Check for empty string
+               if (empty($row['users_id'])) {
+                  $users_id="NULL";
+               } else {
+                  $users_id=$row['users_id'];
+               }
+               if (empty($row['computertypes_id'])) {
+                  $computertypes_id="NULL";
+               } else {
+                  $computertypes_id=$row['computertypes_id'];
+               }
+               if (empty($row['location_id'])) {
+                  $location_id="NULL";
+               } else {
+                  $location_id=$row['location_id'];
+               }
+               if (empty($last_ocs_update)) {
+                  $last_ocs_update="NULL";
+               }
+               $insert_query = "insert into glpi_plugin_machinechecker_inputs
+               (id,name,computertypes_id,computers_contact,users_id,locations_id,states_id,last_ocs_update)
                values
-               ('" . $row['computers_id'] . "','" . $row['computers_name'] . "','" . $row['computertypes_id'] . "','" . $row['computers_contact'] . "','" . $row['users_id']. "','".$row['locations_id']."','" . $row['states_id']."')";
+               ('" . $row['computers_id'] . "','" . $row['computers_name'] . "',$computertypes_id,'" . $row['computers_contact'] . "',$users_id,$location_id,'" . $row['states_id']."','$last_ocs_update')";
                $DB->query($insert_query) or die("Query failed:" . $DB->error());
                $i++;
                Html::changeProgressBarPosition($i, $nb+1 ,"$i / $nb");
@@ -188,5 +231,6 @@ class PluginMachinecheckerInput extends CommonDBTM
          }
       endforeach;
    }
+}
 }
 ?>
