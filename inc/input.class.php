@@ -163,6 +163,8 @@ class PluginMachinecheckerInput extends CommonDBTM
       $ComputerList = explode('\r\n', $ComputerList);
       foreach ($ComputerList as $value):
          if (strlen($value) != 0) {
+            $ExpValue = explode(".", $value, 2);
+            $value = $ExpValue[0];
             $query = "SELECT
                glpi_computers.id as computers_id,
                glpi_computers.name as computers_name,
