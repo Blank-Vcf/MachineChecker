@@ -1,4 +1,6 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 if (!defined('GLPI_ROOT')) {
    die("Sorry. You can't access directly to this file");
 }
@@ -54,81 +56,115 @@ class PluginMachinecheckerInput extends CommonDBTM
    }
    
    
-   function getSearchOptions()
-   {
-      global $DB;
-   
-      $tab                    = array();
-      $tab['common']             = __('Characteristics');
-   
-      $tab[2]['table']          = $this->gettable();
-      $tab[2]['field']          = 'name';
-      $tab[2]['name']           = __('Name');
-      $tab[2]['datatype']       = 'itemlink';
-      $tab[2]['massiveaction']  = true;
-      
-      $tab[3]['table']          = 'glpi_computertypes';
-      $tab[3]['field']          = 'name';
-      $tab[3]['name']           = __('Type');
-      $tab[3]['datatype']       = 'dropdown';
-      
-      $tab[4]['table']          = $this->gettable();
-      $tab[4]['field']          = 'computers_contact';
-      $tab[4]['name']           = __('Alternate username');
-      $tab[4]['datatype']       = 'dropdown';
-      
-      $tab[5]['table']          = 'glpi_users';
-      $tab[5]['field']          = 'name';
-      $tab[5]['name']           = __('User');
-      $tab[3]['datatype']       = 'dropdown';
-      
-      $tab[6]['table']          = 'glpi_locations';
-      $tab[6]['field']          = 'completename';
-      $tab[6]['name']           = __('Location');
-      $tab[6]['datatype']       = 'dropdown';
-      
-      $items_device_joinparams  = array('jointype'          => 'itemtype_item',
-                                        'specific_itemtype' => 'Computer');
+   function rawSearchOptions() {
+      global $CFG_GLPI,$DB;
 
-      $tab[7]['table']          = 'glpi_devicenetworkcards';
-      $tab[7]['field']          = 'designation';
-      $tab[7]['name']           = _n('Network interface', 'Network interfaces', 1);
-      $tab[7]['forcegroupby']   = true;
-      $tab[7]['massiveaction']  = false;
-      $tab[7]['datatype']       = 'string';
-      $tab[7]['joinparams']     = array('beforejoin'
-                                          => array('table'      => 'glpi_items_devicenetworkcards',
-                                                   'joinparams' => $items_device_joinparams));
+      $tab = [];
+      $tab[] = [
+         'id'                 => 'common',
+         'name'               => __('Characteristics')
+      ];
+   
+      $tab[] = [
+         'id'                 => '1',
+         'table'              => $this->getTable(),
+         'field'              => 'name',
+         'name'               => __('Name'),
+         'datatype'           => 'itemlink'
+      ];
 
-      $tab[8]['table']          = 'glpi_items_devicenetworkcards';
-      $tab[8]['field']          = 'mac';
-      $tab[8]['name']           = __('MAC address');
-      $tab[8]['forcegroupby']   = true;
-      $tab[8]['massiveaction']  = false;
-      $tab[8]['datatype']       = 'string';
-      $tab[8]['joinparams']     = $items_device_joinparams;
-      
-      $tab[9]['table']          = 'glpi_states';
-      $tab[9]['field']          = 'completename';
-      $tab[9]['name']           = __('Status');
-      $tab[9]['datatype']       = 'dropdown';
-      
+      $tab[] = [
+         'id'                 => '2',
+         'table'              => 'glpi_computertypes',
+         'field'              => 'name',
+         'name'               => __('Type'),
+         'datatype'           => 'dropdown'
+      ];
+
+      $tab[] = [
+         'id'                 => '3',
+         'table'              => 'glpi_plugin_machinechecker_inputs',
+         'field'              => 'name',
+         'name'               => __('Alternate username'),
+         'datatype'           => 'dropdown'
+      ];
+
+      $tab[] = [
+         'id'                 => '4',
+         'table'              => $this->getTable(),
+         'field'              => 'computers_contact',
+         'name'               => __('Alternate username'),
+         'datatype'           => 'dropdown',
+      ];
+
+      $tab[] = [
+         'id'                 => '5',
+         'table'              => 'glpi_users',
+         'field'              => 'name',
+         'name'               => __('User'),
+         'datatype'           => 'dropdown',
+         'right'              => 'all'
+      ];
+
       //Check for OcsNg PluginMachinecheckerInputs
-      $query = "SELECT state
-                FROM glpi_plugins
-                where directory='ocsinventoryng'";
-      $result = $DB->query($query) or die("Query failed:" . $DB->error());
-      while ($row = $result->fetch_assoc()) {
-         if (isset($row)) {
-            if ($row['state']==1) {
-               $tab[10]['table']          = $this->gettable();
-               $tab[10]['field']          = 'last_ocs_update';
-               $tab[10]['name']           = __('Last OCSNG inventory date', 'ocsinventoryng');
-               $tab[10]['datatype']       = 'datetime';
-            }
+      $query = $DB->request([
+         'SELECT' => ['state'],
+         'FROM'   => 'glpi_plugins',
+         'WHERE'  => ['directory' => 'ocsinventoryng']
+      ]);
+      while ($row = $query->next()) {
+         if ($row['state']==1) {
+            $tab[] = [
+            'id'                 => '10',
+            'table'              => $this->getTable(),
+            'field'              => 'last_ocs_update',
+            'name'               => __('Last OCSNG inventory date', 'ocsinventoryng'),
+            'datatype'           => 'datetime'
+            ];
          }
       }
-//Ajout tab pour le multi entité
+
+      $tab = array_merge($tab, Location::rawSearchOptionsToAdd());
+      
+      $items_device_joinparams   = ['jointype'          => 'itemtype_item',
+                                    'specific_itemtype' => 'Computer'];
+
+      $tab[] = [
+         'id'                 => '7',
+         'table'              => 'glpi_devicenetworkcards',
+         'field'              => 'designation',
+         'name'               => __('Network interface'),
+         'forcegroupby'       => true,
+         'massiveaction'      => false,
+         'datatype'           => 'string',
+         'joinparams'         => [
+            'beforejoin'         => [
+               'table'              => 'glpi_items_devicenetworkcards',
+               'joinparams'         => $items_device_joinparams
+            ]
+         ]
+      ];
+
+      $tab[] = [
+         'id'                 => '8',
+         'table'              => 'glpi_items_devicenetworkcards',
+         'field'              => 'mac',
+         'name'               => __('MAC address'),
+         'forcegroupby'       => true,
+         'massiveaction'      => false,
+         'datatype'           => 'string',
+         'joinparams'         => $items_device_joinparams
+      ];
+      
+      $tab[] = [
+         'id'                 => '9',
+         'table'              => 'glpi_states',
+         'field'              => 'completename',
+         'name'               => __('Status'),
+         'datatype'           => 'dropdown',
+         'condition'          => '`is_visible_computer`'
+      ];
+      
       $tab[] = [
          'id'                 => '11',
          'table'              => 'glpi_entities',
@@ -183,10 +219,23 @@ class PluginMachinecheckerInput extends CommonDBTM
                where glpi_computers.name='" . $value . "'";
             $result = $DB->query($query) or die("Query failed:" . $DB->error());
             if ($DB->numrows($result) == 0) {
+               $random_computers_id="SELECT random_num
+               FROM (
+               SELECT FLOOR(RAND() * 99999) AS random_num
+               UNION
+               SELECT FLOOR(RAND() * 99999) AS random_num
+               ) AS numbers_mst_plus_1
+               WHERE `random_num` NOT IN (SELECT id FROM glpi_computers)
+               AND `random_num` NOT IN (SELECT id FROM glpi_plugin_machinechecker_inputs)
+               LIMIT 1";
+            $resultRnd = $DB->query($random_computers_id) or die("Query failed:" . $DB->error());
+               while ($rowRnd = $DB->fetch_array($resultRnd)) {
+                  $RndID=$rowRnd['random_num'];
+               }
                $insert_query = "insert into glpi_plugin_machinechecker_inputs
                (id,name,computertypes_id,computers_contact,users_id,locations_id,states_id,last_ocs_update,entities_id)
                values
-               ('0','" . $value . "',NULL,NULL,NULL,NULL,'".$MissingStatusId."',NULL,NULL)";
+               (".$RndID.",'" . $value . "',NULL,NULL,NULL,NULL,'".$MissingStatusId."',NULL,NULL)";
                $DB->query($insert_query) or die("Query failed:" . $DB->error());
                $i++;
                Html::changeProgressBarPosition($i, $nb+1 ,"$i / $nb");
@@ -213,6 +262,15 @@ class PluginMachinecheckerInput extends CommonDBTM
                         }
                      }
                   }
+               }
+               //Check for double input of same computer
+               $query = $DB->request([
+                  'SELECT' => ['id'],
+                   'FROM'   => $this->getTable(),
+                  'WHERE'  => ['id' =>  $row['computers_id']]
+               ]);
+               if (count($query)) {
+                  continue;
                }
                //Check for empty string
                if (empty($row['users_id'])) {
