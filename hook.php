@@ -8,41 +8,44 @@ function plugin_machinechecker_install()
    PluginMachinecheckerProfile::createfirstAccess($_SESSION['glpiactiveprofile']['id']);
 
    //create plugin table
-   //Shoulb be nothing in it so drop it and recreate it
+   //Should be nothing in it so drop it and recreate it
    echo "Create plugin database<br>";
    if (TableExists("glpi_plugin_machinechecker_inputs")) {
       $DeleteTable_query ="DROP TABLE `glpi_plugin_machinechecker_inputs`";
       $DB->query($DeleteTable_query) or die($DB->error());
    }
    $query ="CREATE TABLE `glpi_plugin_machinechecker_inputs` (
-           `id` int(11) DEFAULT '0',
-           `name` varchar(45) CHARACTER SET utf8 DEFAULT NULL,
-           `computertypes_id` int(11) DEFAULT NULL,
-           `computers_contact` varchar(255) CHARACTER SET latin1 DEFAULT NULL,
-           `users_id` int(11) DEFAULT NULL,
-           `locations_id` int(11) DEFAULT NULL,
-           `states_id` int(11) DEFAULT NULL,
-           `last_ocs_update` datetime DEFAULT NULL,
-           `entities_id` int(11) DEFAULT NULL) 
-           ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
-   $DB->query($query) or die($DB->error());
+      `id` int(11) DEFAULT '0',
+      `name` varchar(45) CHARACTER SET utf8 DEFAULT NULL,
+      `computertypes_id` int(11) DEFAULT NULL,
+      `computers_contact` varchar(255) CHARACTER SET latin1 DEFAULT NULL,
+      `users_id` int(11) DEFAULT NULL,
+      `locations_id` int(11) DEFAULT NULL,
+      `states_id` int(11) DEFAULT NULL,
+      `last_ocs_update` datetime DEFAULT NULL,
+      `entities_id` int(11) DEFAULT NULL
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
+   $DB->queryOrDie($query, "Create default Machine Checker Table");
 
    //clean and add default plugin table view
    echo "Adding default view<br>";
-   $DeleteViewquery = "DELETE FROM `glpi_displaypreferences`  where itemtype ='PluginMachinecheckerInput'";
-   $DB->query($DeleteViewquery) or die($DB->error());
+   $DB->delete(
+      'glpi_displaypreferences',
+      ['itemtype' => 'PluginMachinecheckerInput']
+   );
+
    $query = "INSERT INTO `glpi_displaypreferences`
             (itemtype,num,rank,users_id)
             VALUES
-            ('PluginMachinecheckerInput', '10', '9', '0'),
-            ('PluginMachinecheckerInput', '9', '8', '0'),
-            ('PluginMachinecheckerInput', '8', '7', '0'),
-            ('PluginMachinecheckerInput', '7', '6', '0'),
-            ('PluginMachinecheckerInput', '6', '5', '0'),
-            ('PluginMachinecheckerInput', '5', '4', '0'),
-            ('PluginMachinecheckerInput', '4', '3', '0'),
-            ('PluginMachinecheckerInput', '3', '2', '0'),
-            ('PluginMachinecheckerInput', '2', '1', '0')";
+            ('PluginMachinecheckerInput',2,1,0),
+            ('PluginMachinecheckerInput',3,2,0),
+            ('PluginMachinecheckerInput',4,3,0),
+            ('PluginMachinecheckerInput',5,4,0),
+            ('PluginMachinecheckerInput',10,5,0),
+            ('PluginMachinecheckerInput',7,6,0),
+            ('PluginMachinecheckerInput',8,7,0),
+            ('PluginMachinecheckerInput',9,8,0),
+            ('PluginMachinecheckerInput',11,9,0)";
    $DB->query($query) or die($DB->error());
    
    //Add new status for missing computer in glpi table glpi_states
@@ -72,10 +75,7 @@ function plugin_machinechecker_uninstall()
 }
 
 function plugin_machinechecker_MassiveActions($type) {
-   return array (
-      'PluginShellcommandsShellcommand'.MassiveAction::CLASS_ACTION_SEPARATOR."generate" => __('Command launch','shellcommands'),
-      'PluginShellcommandsCommandGroup'.MassiveAction::CLASS_ACTION_SEPARATOR."generate" =>  __('Command group launch','shellcommands')
-   );
-
+   
+ return true;
 }
 ?>
